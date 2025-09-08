@@ -2,6 +2,7 @@ from strands import Agent, tool
 from strands_tools import retrieve, http_request
 
 from agents.specialized_agents.b2c_agent import create_b2c_agent
+from agents.specialized_agents.technical_questions_agent import create_technical_questions_agent
 
 
 @tool
@@ -20,5 +21,25 @@ def b2c_assistant(query: str, session_id: str = "default_session") -> str:
     try:
         b2c_agent = create_b2c_agent(session_id)
         return str(b2c_agent(query))
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+@tool
+def technical_questions_assistant(query: str, session_id: str = "default_session") -> str:
+    """
+    Processa e responde a questões técnicas sobre produtos e serviços.
+
+    Args:
+    query: Query contendo questões técnicas sobre especificações, funcionalidades e características de produtos
+    session_id: ID da sessão para manter
+
+    Returns:
+        Uma resposta detalhada sobre aspectos técnicos dos produtos ou serviços consultados
+    """
+    print("Tool 'technical_questions_assistant' was called")
+    try:
+        tech_agent = create_technical_questions_agent(session_id)
+        return str(tech_agent(query))
     except Exception as e:
         return f"Error: {str(e)}"
