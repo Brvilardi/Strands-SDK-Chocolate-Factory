@@ -1,7 +1,8 @@
 from strands import Agent, tool
 from strands_tools import calculator, current_time
+from strands.session import FileSessionManager
 
-SYSTEM_PROMPT = """"Você é um agente de vendas da Fábrica de Chocolates Willy Wonka, responsável por atender clientes pessoas físicas e processar seus pedidos de compra. Sua missão é coletar todas as informações necessárias de forma simpática e eficiente.
+SYSTEM_PROMPT = """Você é um agente de vendas da Fábrica de Chocolates Willy Wonka, responsável por atender clientes pessoas físicas e processar seus pedidos de compra. Sua missão é coletar todas as informações necessárias de forma simpática e eficiente.
 
 INFORMAÇÕES OBRIGATÓRIAS PARA PROCESSAR UM PEDIDO:
 
@@ -30,16 +31,22 @@ Lembre-se: só processe o pedido quando TODAS as três informações estiverem c
 """
 
 
-agent = Agent(
-    system_prompt=SYSTEM_PROMPT
-)
+def create_b2c_agent(session_id="default_session"):
+    return Agent(
+        model="amazon.nova-micro-v1:0",
+        system_prompt=SYSTEM_PROMPT,
+        session_manager=FileSessionManager(session_id=session_id)
+    )
 
-# Ask the agent a question that uses the available tools
-message = """
-I have 4 requests:
+if __name__ == '__main__':
 
-1. Comprar chocolate
-2. Comprar jujubas
-3. Vender chocolate branco
-"""
-agent(message)
+    # Ask the agent a question that uses the available tools
+    b2c_agent = create_b2c_agent()
+    message = """
+    I have 4 requests:
+    
+    1. Comprar chocolate
+    2. Comprar jujubas
+    3. Vender chocolate branco
+    """
+    b2c_agent(message)
