@@ -1,8 +1,10 @@
+import json
+
+import boto3
 from strands import Agent, tool
 from strands_tools import retrieve, http_request
 
-from agents.specialized_agents.b2c_agent import create_b2c_agent
-from agents.specialized_agents.technical_questions_agent import create_technical_questions_agent
+
 
 
 @tool
@@ -19,7 +21,20 @@ def b2c_assistant(query: str, session_id: str = "default_session") -> str:
     """
     print("Tool 'b2c_assistant' was called")
     try:
-        b2c_agent = create_b2c_agent(session_id)
+        client = boto3.client('bedrock-agentcore', region_name='us-west-2')
+        payload = json.dumps({
+            "input": {"prompt": "Explain machine learning in simple terms"}
+        })
+
+        response = client.invoke_agent_runtime(
+            agentRuntimeArn='arn:aws:bedrock-agentcore:us-east-1:954976331552:runtime/technical_questions_agent-8E6zMp2f2f',
+            runtimeSessionId='dfmeoagmreaklgmrkleafremoigrmtesogmtrskhmtkrlshmt',  # Must be 33+ chars
+            payload=payload,
+            # qualifier="DEFAULT"  # Optional
+        )
+        response_body = response['response'].read()
+        response_data = json.loads(response_body)
+        print("Agent Response:", response_data)
         return str(b2c_agent(query))
     except Exception as e:
         return f"Error: {str(e)}"

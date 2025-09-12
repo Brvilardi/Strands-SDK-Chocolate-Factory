@@ -1,5 +1,7 @@
 import os
 from functools import partial
+
+from bedrock_agentcore import BedrockAgentCoreApp
 from dotenv import load_dotenv
 from strands import Agent, tool
 from strands_tools import retrieve
@@ -55,13 +57,26 @@ def create_technical_questions_agent(session_id="default_session", knowledge_bas
     )
 
 
-if __name__ == '__main__':
-    # Configure Knowledge Base ID either by:
-    # 1. Creating .env file with: BEDROCK_KNOWLEDGE_BASE_ID=your-kb-id
-    # 2. Setting environment variable: export BEDROCK_KNOWLEDGE_BASE_ID="your-kb-id"
-    agent = create_technical_questions_agent()
-    message = """
-    Quais são as características técnicas e composição nutricional da jujuba?
-    """
-    resp = agent(message)
-    print(resp)
+app = BedrockAgentCoreApp()
+
+
+
+
+@app.entrypoint
+def invoke(payload):
+    """Process user input and return a response"""
+    session_id = payload.get("session_id", "default_session")
+    user_message = payload.get("prompt", "Hello")
+    orchestrator_agent = Agent(
+        model="amazon.nova-micro-v1:0",
+        system_prompt=SYSTEM_PROMPT + f"\n\nUTILIZE A KNOWLEDGE BASE ID {os.environ.get("BEDROCK_KNOWLEDGE_BASE_ID")}",
+        tools=[retrieve],
+        session_manager=FileSessionManager(session_id=session_id)
+    )
+    result = orchestrator_agent(user_message)
+
+
+    return {"result": str(result)}
+
+if __name__ == "__main__":
+    app.run()

@@ -1,3 +1,4 @@
+from bedrock_agentcore import BedrockAgentCoreApp
 from strands import Agent, tool
 from strands_tools import calculator, current_time
 from strands.session import FileSessionManager
@@ -38,15 +39,28 @@ def create_b2c_agent(session_id="default_session"):
         session_manager=FileSessionManager(session_id=session_id)
     )
 
-if __name__ == '__main__':
 
-    # Ask the agent a question that uses the available tools
-    b2c_agent = create_b2c_agent()
-    message = """
-    I have 4 requests:
-    
-    1. Comprar chocolate
-    2. Comprar jujubas
-    3. Vender chocolate branco
-    """
-    b2c_agent(message)
+
+app = BedrockAgentCoreApp()
+
+
+
+
+@app.entrypoint
+def invoke(payload):
+    """Process user input and return a response"""
+    session_id = payload.get("session_id", "default_session")
+    user_message = payload.get("prompt", "Hello")
+    orchestrator_agent = Agent(
+        model="amazon.nova-micro-v1:0",
+        system_prompt=SYSTEM_PROMPT,
+        callback_handler=None,
+        session_manager=FileSessionManager(session_id=session_id)
+    )
+    result = orchestrator_agent(user_message)
+
+
+    return {"result": str(result)}
+
+if __name__ == "__main__":
+    app.run()
