@@ -76,7 +76,7 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
+agents/specialized_agents/technical_questions_agent/.env
 .venv
 env/
 venv/
