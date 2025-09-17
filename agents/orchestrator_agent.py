@@ -13,8 +13,10 @@ Você é o orquestrador da Fábrica de Chocolates Willy Wonka. Analise a intenç
 
 - Para vendas relacionadas a pessoa física -> use a tool b2c_assistant
 - Para dúvidas técnicas sobre produtos (ingredientes, composição, análises sensoriais, processos) -> use a tool technical_questions
+    - se necessário, execute mais de uma vez essa tool. Exemplo: se o cliente quiser saber algo de todos os produtos, chame essa tool individualmente para cada produto. 
 
 Caso o cliente queira saber sobre produtos, consulte a tool b2c_assistant para ver quais produtos estão disponíveis
+
 
 Não crie respostas ou resolva problemas, apenas utilize as ferramentas providenciadas. Caso a mensagem do usuário não tenha informações suficientes, apenas de uma saudação e pergunte como pode ajudar
 """
@@ -79,7 +81,7 @@ def invoke(payload):
             # Passar session_id no contexto da mensagem
             context_message = f"[SESSION_ID: {session_id}] {user_message}"
             result = orchestrator_agent(context_message)
-            print(f"Resultado da agent: {result}")
+            print(f"Resultado da agent: {result} \n\nMétricas de Tool: {result.metrics.tool_metrics} \n\nMétricas de usage: {result.metrics.accumulated_usage} \n\nState: {result.state}")
             # Limpar o prefixo do session_id da resposta se presente
             if isinstance(result, str) and result.startswith(f"[SESSION_ID: {session_id}]"):
                 result = result.replace(f"[SESSION_ID: {session_id}] ", "")

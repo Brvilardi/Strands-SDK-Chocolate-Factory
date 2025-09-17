@@ -6,6 +6,11 @@ from mcp.server import FastMCP
 # Create an MCP server
 mcp = FastMCP("Specialized Agents Server")
 
+@mcp.tool(description="Lista todos os produtos disponíveis")
+def list_products() -> str:
+    return "Lista de produtos: Chocolate Amargo Wonka Mistério Profundo, Chocolate ao Leite Wonka Delícia Encantada, Chocolate Branco Wonka Nuvem Encantada, Jujuba Wonka Arco-Íris Elástico"
+
+
 # Define a tool
 @mcp.tool(description="Processa e responde a dúvidas técnicas relacionadas aos produtos da fábrica do Willy Wonka")
 def technical_questions(query: str, session_id: str = "default_session_1111111111111111111") -> str:
