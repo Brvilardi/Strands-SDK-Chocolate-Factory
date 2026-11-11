@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fábrica de Chocolates Willy Wonka</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #8B4513, #D2691E);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(139, 69, 19, 0.9);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .container {
+            flex: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sessions-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background: #f5f5f5;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .session-item.active {
+            background: #D2691E;
+            color: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: rgba(255,255,255,0.95);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .message {
+            margin: 0.5rem 0;
+            padding: 0.75rem;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: #D2691E;
+            color: white;
+            margin-left: auto;
+        }
+
+        .bot-message {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .input-area {
+            padding: 1rem;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background: #A0522D;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍫 Fábrica de Chocolates Willy Wonka 🍫</h1>
+        <p>Bem-vindo ao mundo mágico dos chocolates!</p>
+    </div>
+
+    <div class="container">
+        <div class="sessions-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Conversas</h3>
+                <button onclick="createNewSession()">Nova Conversa</button>
+            </div>
+            <div id="sessions-list"></div>
+        </div>
+
+        <div class="chat-container">
+            <div class="messages" id="messages"></div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Digite sua mensagem..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        let sessions = {};
+
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function createNewSession() {
+            const sessionId = generateSessionId();
+            sessions[sessionId] = {
+                id: sessionId,
+                name: `Conversa ${Object.keys(sessions).length + 1}`,
+                messages: []
+            };
+            currentSessionId = sessionId;
+            updateSessionsList();
+            clearMessages();
+        }
+
+        function selectSession(sessionId) {
+            currentSessionId = sessionId;
+            updateSessionsList();
+            loadMessages();
+        }
+
+        function deleteSession(sessionId) {
+            if (Object.keys(sessions).length <= 1) {
+                alert('Você precisa ter pelo menos uma conversa ativa.');
+                return;
+            }
+            
+            delete sessions[sessionId];
+            
+            if (currentSessionId === sessionId) {
+                currentSessionId = Object.keys(sessions)[0];
+            }
+            
+            updateSessionsList();
+            loadMessages();
+        }
+
+        function updateSessionsList() {
+            const sessionsList = document.getElementById('sessions-list');
+            sessionsList.innerHTML = '';
+
+            Object.values(sessions).forEach(session => {
+                const sessionDiv = document.createElement('div');
+                sessionDiv.className = `session-item ${session.id === currentSessionId ? 'active' : ''}`;
+                sessionDiv.innerHTML = `
+                    <span onclick="selectSession('${session.id}')">${session.name}</span>
+                    <button onclick="deleteSession('${session.id}')" style="background: #dc3545; padding: 0.25rem 0.5rem; font-size: 0.8rem;">×</button>
+                `;
+                sessionsList.appendChild(sessionDiv);
+            });
+        }
+
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        function loadMessages() {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML = '';
+
+            if (currentSessionId && sessions[currentSessionId]) {
+                sessions[currentSessionId].messages.forEach(message => {
+                    addMessageToUI(message.text, message.type);
+                });
+            }
+        }
+
+        function addMessageToUI(text, type) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addMessageToSession(text, type) {
+            if (currentSessionId && sessions[currentSessionId]) {
+                sessions[currentSessionId].messages.push({ text, type });
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !currentSessionId) return;
+
+            addMessageToUI(message, 'user');
+            addMessageToSession(message, 'user');
+            input.value = '';
+
+            document.body.classList.add('loading');
+
+            try {
+                const response = await fetch('http://localhost:8080/invocations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        prompt: message
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const botResponse = data.result || 'Desculpe, não consegui processar sua mensagem.';
+                
+                addMessageToUI(botResponse, 'bot');
+                addMessageToSession(botResponse, 'bot');
+
+            } catch (error) {
+                console.error('Erro:', error);
+                const errorMessage = 'Erro ao conectar com o servidor. Verifique se o serviço está rodando em http://localhost:8080';
+                addMessageToUI(errorMessage, 'bot');
+                addMessageToSession(errorMessage, 'bot');
+            } finally {
+                document.body.classList.remove('loading');
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        window.onload = function() {
+            createNewSession();
+        };
+    </script>
+</body>
+</html>
